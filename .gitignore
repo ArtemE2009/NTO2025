@@ -8,5 +8,9 @@ __pycache__/
 data/
 output/
 
+# dev #TODO: delete
+valid_solution.csv
+solution.csv
 stage1_evaluate.py
+stage1_private_solution.csv
 submission.csv
