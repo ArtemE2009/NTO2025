@@ -1,5 +1,5 @@
 """
-Configuration file for the NTO ML competition baseline.
+Configuration file (S3: enable TF-IDF + exposure; baseline-like params; BERT/SVD off).
 """
 
 from pathlib import Path
@@ -23,19 +23,22 @@ SUBMISSION_DIR = OUTPUT_DIR / "submissions"
 
 
 # --- PARAMETERS ---
-N_SPLITS = 5  # Deprecated: kept for backwards compatibility, not used in temporal split
+N_SPLITS = 5
 RANDOM_STATE = 42
-TARGET = constants.COL_TARGET  # Alias for consistency
+TARGET = constants.COL_TARGET
 
 # --- TEMPORAL SPLIT CONFIG ---
-# Ratio of data to use for training (0 < TEMPORAL_SPLIT_RATIO < 1)
-# 0.8 means 80% of data points (by timestamp) go to train, 20% to validation
 TEMPORAL_SPLIT_RATIO = 0.8
 
+# --- FLAGS ---
+USE_TFIDF = True
+USE_BERT = True
+USE_EXPOSURE = True
+
+
 # --- TRAINING CONFIG ---
-EARLY_STOPPING_ROUNDS = 50
-MODEL_FILENAME_PATTERN = "lgb_fold_{fold}.txt"  # Deprecated: kept for backwards compatibility
-MODEL_FILENAME = "lgb_model.txt"  # Single model filename for temporal split
+EARLY_STOPPING_ROUNDS = 80
+MODEL_FILENAME = "lgb_model.txt"
 
 # --- TF-IDF PARAMETERS ---
 TFIDF_MAX_FEATURES = 500
@@ -49,7 +52,6 @@ BERT_BATCH_SIZE = 8
 BERT_MAX_LENGTH = 512
 BERT_EMBEDDING_DIM = 768
 BERT_DEVICE = "cuda" if torch and torch.cuda.is_available() else "cpu"
-# Limit GPU memory usage to 50% to prevent overheating and OOM errors
 BERT_GPU_MEMORY_FRACTION = 0.75
 
 
@@ -65,27 +67,31 @@ CAT_FEATURES = [
     constants.COL_PUBLISHER,
 ]
 
-# --- MODEL PARAMETERS ---
+# --- MODEL PARAMETERS (baseline-like + mild regularization) ---
 LGB_PARAMS = {
     "objective": "rmse",
     "metric": "rmse",
-    "n_estimators": 2000,
+    "n_estimators": 3500,
     "learning_rate": 0.01,
     "feature_fraction": 0.8,
     "bagging_fraction": 0.8,
     "bagging_freq": 1,
-    "lambda_l1": 0.1,
-    "lambda_l2": 0.1,
+    "lambda_l1": 0.3,
+    "lambda_l2": 0.2,
     "num_leaves": 31,
+    "min_data_in_leaf": 100,
     "verbose": -1,
     "n_jobs": -1,
     "seed": RANDOM_STATE,
     "boosting_type": "gbdt",
 }
 
-# LightGBM's fit method allows for a list of callbacks, including early stopping.
-# To use it, we need to specify parameters for the early stopping callback.
 LGB_FIT_PARAMS = {
     "eval_metric": "rmse",
-    "callbacks": [],  # Placeholder for early stopping callback
+    "callbacks": [],
+}
+
+LGB_FIT_PARAMS = {
+    "eval_metric": "rmse",
+    "callbacks": [],
 }
